@@ -27,11 +27,11 @@ sub _ldap_member_of_groups {
     my ($self, $uid) = @_;
 
     $uid = escape_filter_value($uid);
-    my $uid_attr = Bugzilla->params->{"LDAPuidattribute"};
+    my $mail_attr = Bugzilla->params->{"LDAPmailattribute"};
     my $base_dn = Bugzilla->params->{"LDAPBaseDN"};
     my $dn_result = $self->ldap->search(( base   => $base_dn,
                                           scope  => 'sub',
-                                          filter => "$uid_attr=$uid" ),
+                                          filter => "$mail_attr=$uid" ),
                                         attrs => ['memberof']);
 
     if ($dn_result->code) {
