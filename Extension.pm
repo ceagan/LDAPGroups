@@ -102,6 +102,11 @@ sub _create_or_update_user {
 
         $sth_remove_mapping->execute($user->id, $_)
             foreach @{ $removed || [] };
+
+	# Clear the cache if there were any group changes
+	if (scalar @{ $added } != 0 || scalar @{ $removed } != 0) {
+		Bugzilla->memcached->clear_config({ key => 'user_groups.' . $user->id });
+	}
     }
 
     return $result;

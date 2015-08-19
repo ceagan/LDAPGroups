@@ -98,6 +98,14 @@ sub sync_ldap {
     $sth_add->execute($_, $group->id, Bugzilla::Extension::LDAPGroups->GRANT_LDAP) foreach @added;
     $sth_del->execute($_, $group->id, Bugzilla::Extension::LDAPGroups->GRANT_LDAP) foreach @removed;
 
+    foreach my $user (@added) {
+        Bugzilla->memcached->clear_config({ key => 'user_groups.' . $user });
+    }
+
+    foreach my $user (@removed) {
+        Bugzilla->memcached->clear_config({ key => 'user_groups.' . $user });
+    }
+
     return { added => \@added, removed => \@removed };
 }
 
