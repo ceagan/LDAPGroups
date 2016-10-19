@@ -52,7 +52,7 @@ sub sync_ldap {
     my $base_dn = Bugzilla->params->{"LDAPBaseDN"};
 
     # Search for members of the LDAP group.
-    my $filter = "memberof=" . $group->ldap_dn;
+    my $filter = "memberof:1.2.840.113556.1.4.1941:=" . $group->ldap_dn;
     my @attrs = ($mail_attr);
     my $dn_result = $ldap->search(( base   => $base_dn,
                                     scope  => 'sub',
