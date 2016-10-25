@@ -16,6 +16,9 @@ use Bugzilla::Util qw(diff_arrays trim clean_text);
 
 use Bugzilla::Extension::LDAPGroups::Util qw(sync_ldap bind_ldap_for_search);
 
+# Import this class now so its methods can be overriden 
+use Bugzilla::WebService::Group;
+
 use Scalar::Util qw(blessed);
 
 use constant GRANT_LDAP => 3;
@@ -33,7 +36,11 @@ BEGIN {
     *Bugzilla::Group::update = \&_group_update;
     *Bugzilla::Group::_orig_create = \&Bugzilla::Group::create;
     *Bugzilla::Group::create = \&_group_create;
-    *Bugzilla::Group::ldap_dn = sub { $_[0]->{ldap_dn}; }
+    # Override _group_to_hash because there isn't a hook
+    *Bugzilla::WebService::Group::_orig_group_to_hash = \&Bugzilla::WebService::Group::_group_to_hash;
+    *Bugzilla::WebService::Group::_group_to_hash = \&_group_to_hash;
+    *Bugzilla::Group::ldap_dn = sub { $_[0]->{ldap_dn}; };
+    *Bugzilla::Group::set_ldap_dn = sub { $_[0]->set('ldap_dn', $_[1]); };
 };
 
 # From Bugzilla::Auth::Verify::LDAP
@@ -212,6 +219,17 @@ sub group_end_of_update {
     sync_ldap($group) if $group->ldap_dn;
 }
 
+# Add ldap_dn field to the returned data.
+sub _group_to_hash {
+    my ($self, $params, $group) = @_;
+    my $user = Bugzilla->user;
 
+    my $field_data = $self->_orig_group_to_hash($params, $group);
+    if ($user->in_group('creategroups')) {
+        $field_data->{ldap_dn}    = $self->type('string', $group->ldap_dn);
+    }
+
+    return $field_data;
+}
 
 __PACKAGE__->NAME;
