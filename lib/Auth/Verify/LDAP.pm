@@ -44,6 +44,7 @@ sub _ldap_member_of_groups {
     my @dns;
     push @dns, $_->get_value('distinguishedName') for $dn_result->entries;
     my $user_dn = @dns[0];
+    $user_dn = escape_filter_value($user_dn);
     
     my @ldap_group_dns;
     push @ldap_group_dns, $_->get_value('memberof') for $dn_result->entries;
