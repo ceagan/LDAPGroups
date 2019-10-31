@@ -56,14 +56,14 @@ sub _ldap_member_of_groups {
     my $groups_result = $self->ldap->search(( base   => $base_dn,
                                           scope  => 'sub',
                                           filter => "member:1.2.840.113556.1.4.1941:=$user_dn" ),
-                                        attrs => ['memberof']);
+                                          attrs => ['distinguishedName']);
 
     if ($groups_result->code) {
         ThrowCodeError('ldap_search_error',
-            { errstr => $dn_result->error, username => $uid });
+            { errstr => $groups_result->error, username => $uid });
     }
 
-    push @ldap_group_dns, $_->get_value('memberof') for $groups_result->entries;
+    push @ldap_group_dns, $_->get_value('distinguishedName') for $groups_result->entries;
 
     return \@ldap_group_dns;
 }
